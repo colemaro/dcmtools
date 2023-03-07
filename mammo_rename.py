@@ -42,10 +42,7 @@ if not os.path.exists(output_folder):
 #utilize walk and callbacks to retrieve
 hidden_dbt_info = ['Filter Material', 'Body Part Thickness', 'KVP', 'Exposure In uAs']
 
-filter = None #establishing global variable
-body_part_thickness = None 
-kv = None 
-mas = None 
+
 def rename_callback(dataset, data_element): 
     global filter 
     global body_part_thickness
@@ -55,13 +52,13 @@ def rename_callback(dataset, data_element):
         filter = data_element.value
     elif data_element.name == "Body Part Thickness":
         body_part_thickness = "BPT_" + str(int(data_element.value))
-    elif data_element.name == "KVP" and kv is not None:
-        kv =  "kV_" + str(int(data_element.value))
-    elif (data_element.name == "Exposure In mAs") and (mas is not None):
-        mas = "mAs_" + str(round(data_element.value)) #DBT is in mAs, not uAs for FFDM. Always use Acquisition Sequence for value, not per projection.
 
 
 for im in image_list:
+    filter = None #establishing global variable
+    body_part_thickness = None
+    kv = None 
+    mas = None 
     dcm_im = pydicom.dcmread(im)
     if 'Content Time' in available_tags:
         im_time = dcm_im.ContentTime 
@@ -82,6 +79,8 @@ for im in image_list:
     if not set(hidden_dbt_info).issubset(available_tags):
         #Have to use a callback function and a walk through the image to find the nested tags
         dcm_im.walk(rename_callback)
+        kv = "kV_" + str(int(dcm_im.XRay3DAcquisitionSequence[0].KVP))
+        mas = "mAs_" + str(round(dcm_im.XRay3DAcquisitionSequence[0].ExposureInmAs, 1)).replace('.','-')
     else:
         filter = dcm_im.FilterMaterial 
         body_part_thickness = "BPT_" + str(int(dcm_im.BodyPartThickness))
