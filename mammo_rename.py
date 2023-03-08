@@ -40,7 +40,7 @@ if not os.path.exists(output_folder):
 
 #For compressed, BTO or BPO images
 #utilize walk and callbacks to retrieve
-hidden_dbt_info = ['Filter Material', 'Body Part Thickness', 'KVP', 'Exposure In uAs']
+hidden_dbt_info = ['Filter Material', 'Body Part Thickness']
 
 
 def rename_callback(dataset, data_element): 
