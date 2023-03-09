@@ -79,8 +79,12 @@ for im in image_list:
     if not set(hidden_dbt_info).issubset(available_tags):
         #Have to use a callback function and a walk through the image to find the nested tags
         dcm_im.walk(rename_callback)
-        kv = "kV_" + str(int(dcm_im.XRay3DAcquisitionSequence[0].KVP))
-        mas = "mAs_" + str(round(dcm_im.XRay3DAcquisitionSequence[0].ExposureInmAs, 1)).replace('.','-')
+        try:
+            kv = "kV_" + str(int(dcm_im.XRay3DAcquisitionSequence[0].KVP)) #BTOs different to BPOs
+            mas = "mAs_" + str(round(dcm_im.XRay3DAcquisitionSequence[0].ExposureInmAs, 1)).replace('.','-')
+        except:
+            kv = "kV_" + str(int(dcm_im.KVP)) #BTOs different to BPOs
+            mas = "mAs_" + str(round(dcm_im.ExposureInmAs, 1)).replace('.','-')
     else:
         filter = dcm_im.FilterMaterial 
         body_part_thickness = "BPT_" + str(int(dcm_im.BodyPartThickness))
