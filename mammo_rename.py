@@ -18,16 +18,12 @@ print(image_list)
 #folder format is:
 #modality-station_name-study_date
 #image format is:
-#time-series-desc_filter_thickness_kV100_mAs100
+#time-series-desc_mode_filter_thickness_kV100_mAs100
 
 #Imager Pixel Spacing is held in a nested sequence and can't be accessed directly
 
 #initailize folder with first image
 dcm_im_init = pydicom.dcmread(image_list[0])
-available_tags = []
-for elem in dcm_im_init:
-    tag_name = elem.name 
-    available_tags.append(tag_name)
 
 modality = dcm_im_init.Modality
 station_name = dcm_im_init.StationName
@@ -55,11 +51,16 @@ def rename_callback(dataset, data_element):
 
 
 for im in image_list:
+
     filter = None #establishing global variable
     body_part_thickness = None
     kv = None 
     mas = None 
     dcm_im = pydicom.dcmread(im)
+    available_tags = []
+    for elem in dcm_im:
+        tag_name = elem.name 
+        available_tags.append(tag_name)
     if 'Content Time' in available_tags:
         im_time = dcm_im.ContentTime 
     elif 'Acquisition Time' in available_tags:
@@ -91,7 +92,14 @@ for im in image_list:
         kv = "kV_" + str(int(dcm_im.KVP))
         mas = "mAs_" + str(round(dcm_im.ExposureInuAs / 1000))
 
-    list_of_identifiers = [im_time, series_desc, filter, body_part_thickness, kv, mas]
+    if "Projection" in dcm_im.SOPClassUID.name:
+        mode = "PROJ"
+    elif "Tomosynthesis" in dcm_im.SOPClassUID.name:
+        mode = "TOMO"
+    else:
+        mode = "DM"
+
+    list_of_identifiers = [im_time, mode, series_desc, filter, body_part_thickness, kv, mas]
     new_file_name = '-'.join(list_of_identifiers) + '.dcm'
     new_save_path = os.path.join(output_folder, new_file_name)
     dcm_im.save_as(new_save_path)
